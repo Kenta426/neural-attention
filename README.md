@@ -1,2 +1,2 @@
 # neural-attention
-Tensorflow implementation of neural attention (https://arxiv.org/abs/1509.06664)
+Tensorflow implementation of [Reasoning about Entailment with Neural Attention](https://arxiv.org/abs/1509.06664)
