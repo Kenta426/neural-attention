@@ -8,14 +8,14 @@ contains 3 datasets `snli_1.0_train.txt`, `snli_1.0_dev.txt`, `snli_1.0_test.txt
 
 ```python
 # contradiction: A contradicts B
-"A person on a horse jumps over a broken down airplane."
-"A person is at a diner, ordering an omelette."
+A = "A person on a horse jumps over a broken down airplane."
+B = "A person is at a diner, ordering an omelette."
 
 # entailment: A implies B
-"A person on a horse jumps over a broken down airplane."
-"A person is outdoors, on a horse."
+A = "A person on a horse jumps over a broken down airplane."
+B = "A person is outdoors, on a horse."
 
 # neutral: A neither proves nor disproves B
-"A person on a horse jumps over a broken down airplane."
-"A person is training his horse for a competition."
+A = "A person on a horse jumps over a broken down airplane."
+B = "A person is training his horse for a competition."
 ```
