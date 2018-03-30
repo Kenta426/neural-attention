@@ -114,9 +114,12 @@ def load_data(data_type = 'dev', save = False):
         "hypothesis": df[["sentence2"]].values,
         "targets": df[["gold_label"]].values}
 
+    nan = []
+    for i, s in enumerate(dataset['hypothesis']):
+    if type(s[0]) != str:
+        nan.append(i)
     # there are broken nan data
     if data_type == 'train':
-        nan = [91381,91382,91383]
         dataset["premises"] = np.delete(dataset['premises'],nan, axis=0)
         dataset["hypothesis"] = np.delete(dataset['hypothesis'],nan, axis=0)
         dataset["targets"] = np.delete(dataset['targets'],nan, axis=0)

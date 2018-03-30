@@ -24,6 +24,7 @@ class Batcher(object):
         # max sequence length
         self.max_length = max_length
 
+        # build embeddings
         self.p_embedding = np.zeros((len(self.data['targets']), self.max_length), dtype=int)
         self.p_length = np.zeros((len(self.data['targets'])), dtype=int)
         self.h_embedding = np.zeros((len(self.data['targets']), self.max_length), dtype=int)
@@ -64,13 +65,6 @@ class Batcher(object):
 
     def build_batch(self):
         idx = np.random.permutation(len(self.data['targets']))
-
-        self.p_embedding = np.zeros((len(self.data['targets']), self.max_length), dtype=int)
-        self.p_length = np.zeros((len(self.data['targets'])), dtype=int)
-        self.h_embedding = np.zeros((len(self.data['targets']), self.max_length), dtype=int)
-        self.h_length = np.zeros((len(self.data['targets'])), dtype=int)
-        self.t_embedding = np.zeros((len(self.data['targets'])), dtype=int)
-
         # shuffle
         self.p_embedding = self.p_embedding[idx]
         self.p_length = self.p_length[idx]
@@ -91,6 +85,17 @@ class Batcher(object):
         self.h_embedding_batch = np.split(self.h_embedding, self.n_batches, 0)
         self.h_length_batch = np.split(self.h_length, self.n_batches, 0)
         self.t_embedding_batch = np.split(self.t_embedding, self.n_batches, 0)
+
+    def reset_batch(self):
+        # build embeddings
+        self.p_embedding = np.zeros((len(self.data['targets']), self.max_length), dtype=int)
+        self.p_length = np.zeros((len(self.data['targets'])), dtype=int)
+        self.h_embedding = np.zeros((len(self.data['targets']), self.max_length), dtype=int)
+        self.h_length = np.zeros((len(self.data['targets'])), dtype=int)
+        self.t_embedding = np.zeros((len(self.data['targets'])), dtype=int)
+        self.prepro()
+        self.build_batch()
+
 
     def next_batch(self):
         """Return current batch, increment pointer by 1 (modulo n_batches)"""

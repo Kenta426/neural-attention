@@ -12,8 +12,8 @@ N_EPOCH = 100
 SAVE_DIR = './models'
 
 def train():
-    train_batch = Batcher(data_type = 'train')
-    dev_batch = Batcher(data_type='dev')
+    train_batch = Batcher(data_type = 'dev')
+    dev_batch = Batcher(data_type='test')
 
     # baseline graph
     tf.reset_default_graph()
@@ -60,7 +60,7 @@ def train():
                 val_acc = val_acc / dev_batch.n_batches
 
                 print('epoch {:3d}, loss={:.2f}'.format(ep, tr_loss / dev_batch.n_batches))
-                print('Train EM: {:.2f}, Validation EM: {:.2f}'.format(tr_acc / dev_batch.n_batches, val_acc))
+                print('Train Acc: {:.2f}, Validation Acc: {:.2f}'.format(tr_acc / dev_batch.n_batches, val_acc))
 
                 # save model
                 if val_acc >= best_val_acc:
@@ -70,11 +70,11 @@ def train():
                 else:
                     print('Validation accuracy decreased. Restoring model.')
                     saver.restore(sess, os.path.join(SAVE_DIR, 'baseline.ckpt'))
-                    train_batch.build_batch()
-                    dev_batch.build_batch()
+                    train_batch.reset_batch()
+                    dev_batch.reset_batch()
 
         print('Training complete.')
-        print("Best Validation EM: {:.2f}".format(best_val_acc))
+        print("Best Validation Accuracy: {:.2f}".format(best_val_acc))
 
 
 if __name__ == '__main__':
