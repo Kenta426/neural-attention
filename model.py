@@ -23,7 +23,8 @@ LAYER = 1
 ACTIVATION = tf.nn.tanh
 FC_LAYER = 50
 NUM_LABELS = 3
-LEARNING_RATE = 0.0001
+LEARNING_RATE = 0.001
+DROP_OUT = 0.15
 LAMBDA = 0.001
 
 
@@ -55,9 +56,10 @@ class BaselineLSTM(object):
         # embed premise with LSTM, retrieve the output of final state
         with tf.variable_scope('p_embed'):
             if LAYER > 1:
-                p_cell = tf.contrib.rnn.MultiRNNCell([RNN_CELL(NUM_UNIT) for _ in range(LAYER)])
+                p_cell = tf.contrib.rnn.MultiRNNCell([ tf.contrib.rnn.DropoutWrapper(RNN_CELL(NUM_UNIT, output_keep_prob=1.0 - DROP_OUT)) for _ in range(LAYER) ])
             else:
                 p_cell = RNN_CELL(NUM_UNIT)
+                p_cell = tf.contrib.rnn.DropoutWrapper(p_cell, output_keep_prob=1.0 - DROP_OUT)
             init_state = p_cell.zero_state(BATCH, dtype=tf.float32)
             # BATCH x MAX_LENGTH x NUM_UNIT
             _, premise_state = tf.nn.dynamic_rnn(p_cell, self.premise_encode, sequence_length=self.p_input_lengths, initial_state=init_state)
@@ -65,9 +67,11 @@ class BaselineLSTM(object):
         # embed hypothesis with LSTM, retrieve the output of final state
         with tf.variable_scope('h_embed'):
             if LAYER > 1:
-                h_cell = tf.contrib.rnn.MultiRNNCell([RNN_CELL(NUM_UNIT) for _ in range(LAYER)])
+                h_cell = tf.contrib.rnn.MultiRNNCell([ tf.contrib.rnn.DropoutWrapper(RNN_CELL(NUM_UNIT, output_keep_prob=1.0 - DROP_OUT)) for _ in range(LAYER)])
+
             else:
                 h_cell = RNN_CELL(NUM_UNIT)
+                h_cell = tf.contrib.rnn.DropoutWrapper(h_cell, output_keep_prob=1.0 - DROP_OUT)
             # BATCH x MAX_LENGTH x NUM_UNIT
             _, self.hypothesis_embed = tf.nn.dynamic_rnn(p_cell, self.hypothesis_encode, sequence_length=self.h_input_lengths, initial_state=premise_state)
             # get the last output

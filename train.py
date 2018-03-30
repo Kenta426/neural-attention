@@ -8,12 +8,12 @@ import tensorflow as tf
 from tqdm import tqdm
 import os
 
-N_EPOCH = 100
+N_EPOCH = 20
 SAVE_DIR = './models'
 
 def train():
-    train_batch = Batcher(data_type = 'dev')
-    dev_batch = Batcher(data_type='test')
+    train_batch = Batcher(data_type = 'train')
+    dev_batch = Batcher(data_type='dev')
 
     # baseline graph
     tf.reset_default_graph()
@@ -46,7 +46,7 @@ def train():
             train_accuracies.append(tr_acc / train_batch.n_batches)
 
             # check validation accuracy every 10 epochs
-            if ep % 2 == 0:
+            if ep % 1== 0:
                 val_acc = 0
 
                 for itr in range(dev_batch.n_batches):
