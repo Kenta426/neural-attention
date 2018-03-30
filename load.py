@@ -49,12 +49,15 @@ def process_sentences(df):
         dict:      all vocab in the training set
     """
     vocab = set([])
+    max_length = 0
     for sent_type in ["premises", "hypothesis"]:
         tokenized_data = []
         for sent in tqdm(df[sent_type]):
             token = tokenize(sent[0])
             tokenized_data.append(token)
             vocab.update(set(token))
+            if max(max_length, len(token)) == len(token):
+                max_length = len(token)
         df[sent_type] = tokenized_data
     return df, vocab
 
@@ -94,7 +97,7 @@ def load_data():
     Output mapping dictionary
     """
     #TODO: this process should go inside of Loader class or Batcher
-    
+
     vocab = {}
     print("\nLoading dataset:")
     df = pd.read_csv(os.path.join(model.DATA_DIR, "snli_1.0_{}.txt".format(model.MODE)), delimiter="\t")
@@ -105,6 +108,7 @@ def load_data():
     sentences, vocab = process_sentences(dataset)
     glove = load_glove(os.path.join(model.DATA_DIR, "glove.6B", model.GLOVE_FILE))
     embedding_matrix, word2id, id2word = build_wordmatrix(glove, vocab)
+    np.save('./data/word_matrix.npy', embedding_matrix)
     return sentences, embedding_matrix, (word2id, id2word)
 
 load_data()
