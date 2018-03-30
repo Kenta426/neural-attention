@@ -8,6 +8,7 @@ import os
 import model
 import numpy as np
 from tqdm import tqdm
+import pickle
 
 NLP = spacy.blank('en')
 
@@ -18,6 +19,7 @@ def tokenize(text):
     Returns:
         list: tokenized sentence
     """
+    assert type(text) == str, print(text)
     return [i.text for i in NLP(text)]
 
 def load_glove(path):
@@ -53,12 +55,16 @@ def process_sentences(df):
     for sent_type in ["premises", "hypothesis"]:
         tokenized_data = []
         for sent in tqdm(df[sent_type]):
-            token = tokenize(sent[0])
-            tokenized_data.append(token)
-            vocab.update(set(token))
-            if max(max_length, len(token)) == len(token):
-                max_length = len(token)
+            try:
+                token = tokenize(sent[0])
+                tokenized_data.append(token)
+                vocab.update(set(token))
+                if max(max_length, len(token)) == len(token):
+                    max_length = len(token)
+            except:
+                print(sent)
         df[sent_type] = tokenized_data
+
     return df, vocab
 
 def build_wordmatrix(glove, vocab):
@@ -74,7 +80,7 @@ def build_wordmatrix(glove, vocab):
     """
     word2id = {}
     id2word = {}
-    # vocab + 1 for the EOF token
+    # vocab + 1 for the EOF token, unknown word
     embedding_matrix = np.zeros([len(vocab)+1, model.EMBEDDING_DIM])
 
     glove_vocab = glove.keys()
@@ -88,27 +94,45 @@ def build_wordmatrix(glove, vocab):
             id2word[i] = v
             # TODO: training time, the out-of-vocab is randomly initialized but also optimized, too
             embedding_matrix[i] = np.random.uniform(-0.05, 0.05, model.EMBEDDING_DIM)
-    word2id["EOF"] = i+1
-    id2word[i+1] = "EOF"
+
     return embedding_matrix, word2id, id2word
 
-def load_data():
+def load_data(data_type = 'dev', save = False):
     """Load dataset and convert it to tokenized sentences, generate an embedding matrix,
     Output mapping dictionary
     """
     #TODO: this process should go inside of Loader class or Batcher
-
+    assert data_type in ['dev', 'train', 'test'], "select from 'dev', 'train', 'test'"
     vocab = {}
-    print("\nLoading dataset:")
-    df = pd.read_csv(os.path.join(model.DATA_DIR, "snli_1.0_{}.txt".format(model.MODE)), delimiter="\t")
+    word2id = {}
+    id2word = {}
+
+    print("\nLoading {} dataset:".format(data_type))
+    df = pd.read_csv(os.path.join(model.DATA_DIR, "snli_1.0_{}.txt".format(data_type)), delimiter="\t")
     dataset = {
         "premises": df[["sentence1"]].values,
         "hypothesis": df[["sentence2"]].values,
         "targets": df[["gold_label"]].values}
-    sentences, vocab = process_sentences(dataset)
-    glove = load_glove(os.path.join(model.DATA_DIR, "glove.6B", model.GLOVE_FILE))
-    embedding_matrix, word2id, id2word = build_wordmatrix(glove, vocab)
-    np.save('./data/word_matrix.npy', embedding_matrix)
-    return sentences, embedding_matrix, (word2id, id2word)
 
-load_data()
+    # there are nan data
+    if data_type == 'train':
+        nan = [91479, 91480, 91481]
+        dataset["premises"] = np.delete(dataset['premises'],nan, axis=0)
+        dataset["hypothesis"] = np.delete(dataset['hypothesis'],nan, axis=0)
+        dataset["targets"] = np.delete(dataset['targets'],nan, axis=0)
+
+    sentences, vocab = process_sentences(dataset)
+
+    if save:
+        glove = load_glove(os.path.join(model.DATA_DIR, "glove.6B", model.GLOVE_FILE))
+        embedding_matrix, word2id, id2word = build_wordmatrix(glove, vocab)
+
+        np.save('./data/word_matrix.npy', embedding_matrix)
+        with open('./data/word2id.pkl', 'wb') as f:
+            pickle.dump(word2id, f)
+        with open('./data/id2word.pkl', 'wb') as f:
+            pickle.dump(id2word, f)
+
+        print('\nModel saved')
+
+    return sentences, (word2id, id2word)
