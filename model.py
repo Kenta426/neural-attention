@@ -8,7 +8,7 @@ import numpy as np
 
 
 DATA_DIR = './data/'
-GLOVE_FILE = 'glove.6b.300d.txt'
+GLOVE_FILE = 'glove.6B.300d.txt'
 MODE = 'dev'
 
 # data parameter
