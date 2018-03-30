@@ -64,7 +64,6 @@ def process_sentences(df):
             except:
                 print(sent)
         df[sent_type] = tokenized_data
-
     return df, vocab
 
 def build_wordmatrix(glove, vocab):
@@ -108,15 +107,16 @@ def load_data(data_type = 'dev', save = False):
     id2word = {}
 
     print("\nLoading {} dataset:".format(data_type))
-    df = pd.read_csv(os.path.join(model.DATA_DIR, "snli_1.0_{}.txt".format(data_type)), delimiter="\t")
+    df = pd.read_csv(os.path.join(model.DATA_DIR, "snli_1.0/snli_1.0_{}.txt".format(data_type)), delimiter="\t")
+    df = df[df["gold_label"] != '-']
     dataset = {
         "premises": df[["sentence1"]].values,
         "hypothesis": df[["sentence2"]].values,
         "targets": df[["gold_label"]].values}
 
-    # there are nan data
+    # there are broken nan data
     if data_type == 'train':
-        nan = [91479, 91480, 91481]
+        nan = [91381,91382,91383]
         dataset["premises"] = np.delete(dataset['premises'],nan, axis=0)
         dataset["hypothesis"] = np.delete(dataset['hypothesis'],nan, axis=0)
         dataset["targets"] = np.delete(dataset['targets'],nan, axis=0)
