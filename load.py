@@ -116,8 +116,8 @@ def load_data(data_type = 'dev', save = False):
 
     nan = []
     for i, s in enumerate(dataset['hypothesis']):
-    if type(s[0]) != str:
-        nan.append(i)
+        if type(s[0]) != str:
+            nan.append(i)
     # there are broken nan data
     if data_type == 'train':
         dataset["premises"] = np.delete(dataset['premises'],nan, axis=0)
