@@ -72,7 +72,7 @@ class Batcher(object):
         self.h_length = self.h_length[idx]
         self.t_embedding = self.t_embedding[idx]
         # number of batches
-        self.n_batches = int(self.t_embedding.shape[0] / self.batch_size)
+        self.n_batches = int((self.t_embedding.shape[0] / self.batch_size))
         # truncate dataset
         self.p_embedding = self.p_embedding[:self.n_batches*self.batch_size, :]
         self.p_length = self.p_length[:self.n_batches*self.batch_size]

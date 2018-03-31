@@ -32,7 +32,7 @@ def load_glove(path):
     print ("\nLoading glove:")
     # took 30s on my laptop
     embedding_vectors = {}
-    with open(path, 'r') as f:
+    with open(path, 'r', encoding="utf8") as f:
         for line in tqdm(f):
             line_split = line.strip().split(' ')
             vector = np.array(line_split[1:], dtype=float)
@@ -79,20 +79,20 @@ def build_wordmatrix(glove, vocab):
     """
     word2id = {}
     id2word = {}
-    # vocab + 1 for the EOF token, unknown word
+    # vocab + 1 for the EOF token, unknown word / token is at 0's index
     embedding_matrix = np.zeros([len(vocab)+1, model.EMBEDDING_DIM])
 
     glove_vocab = glove.keys()
     for i,v in enumerate(vocab):
         if v in glove_vocab:
-            word2id[v] = i
-            id2word[i] = v
-            embedding_matrix[i] = glove[v]
+            word2id[v] = i+1
+            id2word[i+1] = v
+            embedding_matrix[i+1] = glove[v]
         else:
-            word2id[v] = i
-            id2word[i] = v
+            word2id[v] = i+1
+            id2word[i+1] = v
             # TODO: training time, the out-of-vocab is randomly initialized but also optimized, too
-            embedding_matrix[i] = np.random.uniform(-0.05, 0.05, model.EMBEDDING_DIM)
+            embedding_matrix[i+1] = np.random.uniform(-0.05, 0.05, model.EMBEDDING_DIM)
 
     return embedding_matrix, word2id, id2word
 
