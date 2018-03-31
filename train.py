@@ -3,7 +3,7 @@ training script
 """
 
 from batch import Batcher
-from model import BaselineLSTM
+from model import BaselineLSTM, WordbyWordAttention
 import tensorflow as tf
 from tqdm import tqdm
 import os
@@ -12,12 +12,12 @@ N_EPOCH = 200
 SAVE_DIR = './models'
 
 def train():
-    train_batch = Batcher(data_type = 'dev')
-    dev_batch = Batcher(data_type='test')
+    train_batch = Batcher(data_type = 'train')
+    dev_batch = Batcher(data_type='dev')
 
     # baseline graph
     tf.reset_default_graph()
-    baseline = BaselineLSTM()
+    baseline = WordbyWordAttention()
     saver = tf.train.Saver()
     best_val_acc = 0
     # record training loss & accuracy

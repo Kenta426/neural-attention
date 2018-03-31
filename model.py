@@ -17,15 +17,15 @@ MAX_LENGTH = 85
 BATCH = 64
 
 # model config
-RNN_CELL = tf.contrib.rnn.LSTMCell
+RNN_CELL = tf.contrib.rnn.GRUCell
 DROP_CELL = tf.contrib.rnn.DropoutWrapper
 NUM_UNIT = 60
 LAYER = 1
 ACTIVATION = tf.nn.tanh
 NUM_LABELS = 3
-LEARNING_RATE = 0.0001
-DROP_OUT = 0.1
-LAMBDA = 0.001
+LEARNING_RATE = 0.0005
+DROP_OUT = 0.2
+LAMBDA = 0.005
 
 # attenntion
 ATTENTION_CELL = tf.contrib.seq2seq.BahdanauAttention
@@ -142,5 +142,35 @@ class WordbyWordAttention(ConditionalEncoding):
             attention_state = attention_state.clone(cell_state=self.p_state)
 
             # tf.nn.dynamic_rnn(attention_cell, self.hypothesis_encode, sequence_length=self.h_input_lengths, initial_state=attention_state)
+            helper = tf.contrib.seq2seq.TrainingHelper(inputs=self.h_embedding, sequence_length=self.h_input_lengths)
+            decoder = tf.contrib.seq2seq.BasicDecoder(attention_cell, helper, attention_state)
+            self.decoder_outputs, self.dec_state, _ = tf.contrib.seq2seq.dynamic_decode(decoder, maximum_iterations=MAX_LENGTH)
+
+            # softmax layer, BATCH x FC_LAYER -> BATCH x NUM_LABELSs
+            with tf.variable_scope('soft_max'):
+                if RNN_CELL != tf.contrib.rnn.LSTMCell:
+                    units_in = self.dec_state.cell_state.get_shape().as_list()[-1]
+                    h_state = self.dec_state.cell_state
+                else:
+                    units_in = self.dec_state.cell_state[0].get_shape().as_list()[-1]
+                    h_state = self.dec_state.cell_state[0]
+                weights = tf.get_variable('w', shape=[units_in, NUM_LABELS], dtype=tf.float32, initializer=tf.truncated_normal_initializer(stddev=0.05))
+                biases = tf.get_variable('b', shape=[NUM_LABELS], dtype=tf.float32, initializer=tf.constant_initializer(0.1))
+                tf.add_to_collection(tf.GraphKeys.REGULARIZATION_LOSSES, tf.nn.l2_loss(weights))
+                self.logits = tf.nn.xw_plus_b(h_state, weights, biases)
+                self.preds = tf.nn.softmax(self.logits)
+
+            # calculate loss and optimize
+            with tf.variable_scope('loss'):
+                cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=self.output, logits=self.logits)
+                self.loss = tf.reduce_mean(cross_entropy) + LAMBDA*tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
+                self.opt = tf.train.AdamOptimizer(LEARNING_RATE).minimize(self.loss)
+
+            # mean accuracy of batch
+            with tf.variable_scope('accuracy'):
+                label = tf.cast(self.output, 'int32')
+                corrects = tf.equal(tf.cast(tf.argmax(self.preds, 1), 'int32'), label)
+                self.accuracy = tf.reduce_mean(tf.cast(corrects, tf.float32))
+
 
 WordbyWordAttention()
