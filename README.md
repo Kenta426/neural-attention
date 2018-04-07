@@ -173,6 +173,6 @@ self.heatmap = tf.transpose(self.aligned_state.alignment_history.stack(), [1,0,2
 ```
 
 ### Bidirectional Architecture
-Thought prone to overfit, we also support bidirectional model by setting the parameter `BI_DIRECTIONAL` to `True`
+Though prone to overfit, we also support bidirectional model by setting the parameter `BI_DIRECTIONAL` to `True`
 
 ![bi-directional](./figs/bi-directional.png)
